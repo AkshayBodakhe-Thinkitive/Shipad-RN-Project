@@ -1,24 +1,37 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import Feather from '@react-native-vector-icons/feather';
 import AntDesign from '@react-native-vector-icons/ant-design';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import { RootState } from '../../../store/storeConfig';
-import { useAppSelector } from '../../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { useNavigation } from '@react-navigation/native';
-import {AppNavConstants} from '../../../contsants/NavConstants'
+import {
+  AppNavConstants,
+  AuthNavConstants,
+} from '../../../constants/NavConstants';
+import { logoutAction } from '../../auth/store/async-actions/AuthAsyncActions';
+import { FontType } from '../../../constants/FontType';
 
 const ProfileTab = () => {
   const profile = useAppSelector(
     (state: RootState) => state?.profile?.profileData,
   );
 
-  useEffect(() => {
-    console.log(profile);
-  }, []);
+  const handleViewProfileClick = () =>
+    navigation.navigate(AppNavConstants.PROFILE_SCREEN);
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {}, []);
 
   const navigation = useNavigation<any>();
+
+  const logoutFunction = async () => {
+    await dispatch(logoutAction());
+    navigation.navigate(AuthNavConstants.LOGIN_SCREEN);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,7 +76,10 @@ const ProfileTab = () => {
       <Text style={styles.sectionTitle}>Account</Text>
 
       <View style={styles.menuCard}>
-        <TouchableOpacity onPress={()=>navigation.navigate(AppNavConstants.PROFILE_SCREEN)} style={styles.menuItem}>
+        <TouchableOpacity
+          onPress={handleViewProfileClick}
+          style={styles.menuItem}
+        >
           <View style={styles.iconCircle}>
             <Feather name="user" size={18} color="#2F80ED" />
           </View>
@@ -79,7 +95,25 @@ const ProfileTab = () => {
           <AntDesign name="right" size={16} color="#999" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity
+          onPress={()=>{Alert.alert(
+            'Logout',
+            'You will need to log in again after logout.',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+              },
+              {
+                text: 'Logout',
+                style: 'destructive',
+                onPress: logoutFunction,
+              },
+            ],
+            { cancelable: true },
+          )}}
+          style={styles.menuItem}
+        >
           <View style={styles.iconCircle}>
             <Feather name="log-out" size={18} color="#2F80ED" />
           </View>
@@ -96,7 +130,7 @@ export default ProfileTab;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F2',
+    backgroundColor: 'white',
     paddingHorizontal: 6,
   },
 
@@ -108,6 +142,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 16,
     elevation: 2,
+    fontFamily:FontType.Roboto_Medium
   },
 
   profileCard: {
@@ -126,11 +161,13 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily:FontType.Roboto_Medium
   },
 
   id: {
     color: '#777',
     fontWeight: '400',
+    fontFamily:FontType.Roboto_Medium
   },
 
   badge: {
@@ -144,6 +181,7 @@ const styles = StyleSheet.create({
     color: '#6C5CE7',
     fontSize: 12,
     fontWeight: '500',
+    fontFamily:FontType.Roboto_Medium
   },
 
   divider: {
@@ -161,19 +199,21 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontSize: 14,
     color: '#555',
+    fontFamily:FontType.Roboto_Medium
   },
 
-horizontalView: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 8,
-},
+  horizontalView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
 
   sectionTitle: {
     marginTop: 25,
     marginBottom: 10,
     color: '#888',
     fontWeight: '500',
+    fontFamily:FontType.Roboto_Medium
   },
 
   menuCard: {
@@ -203,5 +243,6 @@ horizontalView: {
   menuText: {
     flex: 1,
     fontSize: 15,
+    fontFamily:FontType.Roboto_Medium
   },
 });

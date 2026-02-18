@@ -7,6 +7,7 @@ const initialState: AuthState = {
   isLoggedIn: false,
   isOnboarded: false,
   loading: false,
+  TenantID : '',
   loginData: null,
   accessToken: null,
   refreshToken: null,

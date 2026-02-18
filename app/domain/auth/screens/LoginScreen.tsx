@@ -13,21 +13,29 @@ import Feather from '@react-native-vector-icons/feather';
 import AntDesign from '@react-native-vector-icons/ant-design';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import NetInfo from '@react-native-community/netinfo';
-import { useAppDispatch } from '../../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { useNavigation } from '@react-navigation/native';
 import { loginAction } from '../store/async-actions/AuthAsyncActions';
 import { setToastMessage } from '../../../store/common-reducer/ToastReducer';
-import { AppNavConstants } from '../../../contsants/NavConstants';
+import { AppNavConstants } from '../../../constants/NavConstants';
 import { setAuthorization, setTenantId } from '../../../config/AxiosConfig';
-import { getProfileAction } from '../../profile/store/async-actions/ProfileAsyncActions'
+import { getProfileAction } from '../../profile/store/async-actions/ProfileAsyncActions';
+import { RootState } from '../../../store/storeConfig';
+import { imagePaths } from '../../../constants/imagePaths';
+import InputText from '../../../components/inputText/InputText';
+import { Colors } from '../../../constants/ColorConstants';
+import Button from '../../../components/Button';
+import { FontType } from '../../../constants/FontType';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [language, setLanguage] = useState('EN');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<any>({});
+
+  const auth = useAppSelector((state: RootState) => state.auth);
+  const tenantId = useAppSelector((state: RootState) => state.auth.TenantID);
 
   const dispatch = useAppDispatch();
   const navigation = useNavigation<any>();
@@ -62,7 +70,7 @@ const LoginScreen = () => {
       const response = await dispatch(
         loginAction({ username: email, password }),
       );
-      console.log('[Login Screen, Login status response]', response);
+
       if (
         response?.meta?.requestStatus == 'fulfilled' &&
         !response?.payload?.error
@@ -70,25 +78,10 @@ const LoginScreen = () => {
         dispatch(
           setToastMessage({ message: 'Login Successful', type: 'success' }),
         );
-
-
-
-
-
-
-
         setAuthorization(response?.payload?.loginData?.access_token);
-        const profileData =  await dispatch(getProfileAction());
-        console.log("[Login Screen, getProfile response]", profileData);
-
-
-
-
-
-
+        const profileData = await dispatch(getProfileAction());
 
         navigation.replace(AppNavConstants.HOME);
-
       } else {
         dispatch(
           setToastMessage({
@@ -114,74 +107,32 @@ const LoginScreen = () => {
         <View style={styles.header}>
           <View style={styles.logoRow}>
             <Image
-              source={require('../../../assets/eAMata Blue Text.png')}
+              source={imagePaths.LOGO}
               style={styles.logoImage}
               resizeMode="contain"
             />
           </View>
         </View>
 
-        <Text style={styles.label}>Email</Text>
-        <View style={styles.inputWrapper}>
-          <Feather name="mail" size={18} color="#7A8A91" />
-          <TextInput
-            placeholder="Enter Your Email"
-            placeholderTextColor="#7A8A91"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
+        <InputText
+          label="Email"
+          placeholder="Enter Your Email"
+          leftIcon={<Feather name="mail" size={18} color={Colors.iconColor} />}
+          value={email}
+          onChangeText={setEmail}
+        />
+        
+        <InputText label='Password' placeholder='Enter Your Password' secureTextEntry  value={password} onChangeText={setPassword}/>
 
-        <Text style={styles.label}>Password</Text>
-        <View style={styles.inputWrapper}>
-          <Feather name="key" size={18} color="#7A8A91" />
-          <TextInput
-            placeholder="Enter Your Password"
-            placeholderTextColor="#7A8A91"
-            secureTextEntry={!passwordVisible}
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity
-            onPress={() => setPasswordVisible(!passwordVisible)}
-          >
-            <Feather
-              name={passwordVisible ? 'eye' : 'eye-off'}
-              size={18}
-              color="#7A8A91"
-            />
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.label}>Practice Code</Text>
-        <View style={styles.inputWrapper}>
-          <AntDesign name="plus" size={18} color="#7A8A91" />
-          <TextInput
-            placeholder="Enter Practice Code"
-            placeholderTextColor="#7A8A91"
-            style={styles.input}
-          />
-        </View>
+        <InputText label='Practice Code' placeholder='Enter Practice Code' value={tenantId} onChangeText={setTenantId}/>
 
         <TouchableOpacity>
           <Text style={styles.forgotText}>Forgot your password?</Text>
         </TouchableOpacity>
 
         <View style={{ flex: 1 }} />
-
-        <TouchableOpacity
-          onPress={handleLogin}
-          style={styles.disabledButton}
-          activeOpacity={1}
-        >
-          {isLoading ? (
-            <ActivityIndicator />
-          ) : (
-            <Text style={styles.disabledButtonText}>Next</Text>
-          )}
-        </TouchableOpacity>
+        
+        <Button text='Next' onPress={handleLogin} isLoading={isLoading} />
       </View>
     </SafeAreaView>
   );
@@ -192,7 +143,7 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F6F8',
+    backgroundColor: 'white',
   },
   innerContainer: {
     flex: 1,
@@ -293,19 +244,20 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     color: '#1A9CB0',
     textDecorationLine: 'underline',
-    fontSize: 13,
+    fontSize: 15,
+    fontFamily:FontType.Roboto_Medium
   },
 
   disabledButton: {
     height: 50,
-    backgroundColor: '#D9DEE2',
+    backgroundColor: '#006D8F',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
   disabledButtonText: {
-    color: '#8A959C',
+    color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },

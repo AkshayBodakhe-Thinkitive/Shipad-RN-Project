@@ -20,6 +20,7 @@ export interface FamilyMember {
 
 export interface Profile {
     userId: string,
+    uuid:string,
     patientId: string,
     firstName: string,
     lastName: string,
@@ -33,6 +34,9 @@ export interface Profile {
     roleType?: string,
     address?: Address,
     language?: string,
+    mobileNumber?:string;
+    avatar?:string;
+    nurseAvatar?:string;
     familyMembers?: FamilyMember[],
     mrn?: string,
     ssn?: string,

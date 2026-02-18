@@ -23,7 +23,6 @@ const ProfileReducers = createSlice({
       })
       .addCase(getProfileAction.fulfilled, (state, action) => {
         state.profileData = action.payload?.data;
-        console.log(state.profileData);
         state.loading = false;
       })
       .addCase(getProfileAction.rejected, (state, action) => {

@@ -25,3 +25,16 @@ export const loginAction = createAsyncThunk<any, any, { state: RootState }>(
     return { loginData: response?.data };
   },
 );
+
+export const logoutAction = createAsyncThunk<any, void, { state: RootState }>(
+  AUTH_REDUCER + '/logout',
+  async (_, thunkApi) => {
+    const refreshToken = thunkApi.getState()?.auth.refreshToken
+    const payload = {
+      refreshToken: refreshToken
+    }
+    const response = await AuthService.logout(payload);
+    thunkApi.dispatch(resetAuthReducer());
+    return response;
+  },
+);
