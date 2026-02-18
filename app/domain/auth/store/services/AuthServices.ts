@@ -20,6 +20,15 @@ class AuthService{
   }
 }
 
+ async logout(payload:any) {
+    try {
+      const response: any = await post(`/logout`,payload);
+      return response;
+    } catch (error: any) {
+      return { error: error, status: error?.status };
+    }
+  }
+
 }
 
 export default new AuthService();

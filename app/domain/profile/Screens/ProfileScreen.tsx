@@ -6,27 +6,34 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import Feather from '@react-native-vector-icons/feather';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { RootState } from '../../../store/storeConfig';
 import { useAppSelector } from '../../../store/hooks';
-import { AppNavConstants } from '../../../contsants/NavConstants';
+import { AppNavConstants } from '../../../constants/NavConstants';
+import Button from '../../../components/Button';
+import { Colors } from '../../../constants/ColorConstants';
+import { imagePaths } from '../../../constants/imagePaths';
+import { firstLetterCapitalize } from '../../../utils/helperUtils';
+import { FontType } from '../../../constants/FontType';
 
 const ProfileScreen = () => {
   const profile = useAppSelector(
     (state: RootState) => state?.profile?.profileData,
   );
 
-  useEffect(() => {
-    console.log('[Profile SCreen] ', profile);
-  }, []);
+  const editProfileClick = () =>
+    navigation.navigate(AppNavConstants.EDIT_PROFILE);
+
+  const [imageLoading, setImageLoading] = React.useState(true);
 
   const navigation = useNavigation<any>();
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
@@ -35,11 +42,17 @@ const ProfileScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.imageContainer}>
+          {imageLoading && <ActivityIndicator size="large" color="white" />}
+
           <Image
             source={{
-              uri: `${profile.nurseAvatar}`,
+              uri: profile?.nurseAvatar != null
+                ? profile.nurseAvatar
+                : imagePaths.NO_PROFILE,
             }}
             style={styles.profileImage}
+            onLoadStart={() => setImageLoading(true)}
+            onLoadEnd={() => setImageLoading(false)}
           />
         </View>
 
@@ -50,23 +63,15 @@ const ProfileScreen = () => {
           />
           <LabelValue label="Email" value={profile.email} />
           <LabelValue label="Date" value={profile.birthDate} />
-          <LabelValue label="Gender" value={profile.gender} />
+          <LabelValue label="Gender" value={firstLetterCapitalize(profile.gender)} />
           <LabelValue label="Phone Number" value={profile.mobileNumber} />
           <Text style={styles.sectionTitle}>Address</Text>
 
-          <View style={styles.addressCard}>
-            <Text style={styles.addressLine}>
-              {profile?.address?.line1}
-              {profile?.address?.line2 ? `, ${profile?.address?.line2}` : ''}
-            </Text>
-
-            <Text style={styles.addressLine}>
-              {profile?.address?.city},  {profile?.address?.state}{'  '}
-              {profile?.address?.zipcode}
-            </Text>
-
-            <Text style={styles.addressLine}>{profile?.address?.country}</Text>
-          </View>
+          <LabelValue label="line1" value={profile?.address?.line1} />
+          <LabelValue label="line2" value={profile?.address?.line2} />
+          <LabelValue label="city" value={profile?.address?.city} />
+          <LabelValue label="state" value={profile?.address?.state} />
+          <LabelValue label="zipcode" value={profile?.address?.zipcode} />
 
           <Text style={styles.sectionTitle}>Emergency Details</Text>
 
@@ -76,13 +81,11 @@ const ProfileScreen = () => {
       </ScrollView>
 
       <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate(AppNavConstants.EDIT_PROFILE)}
-          style={styles.editButton}
-        >
-          <Feather name="edit-2" size={18} color="#333" />
-          <Text style={styles.editText}>Edit Profile</Text>
-        </TouchableOpacity>
+        <Button
+          text="Edit Profile"
+          onPress={editProfileClick}
+          icon={<Feather name="edit-2" size={18} color="white" />}
+        />
       </View>
     </SafeAreaView>
   );
@@ -100,7 +103,7 @@ const LabelValue = ({ label, value }: any) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F4',
+    backgroundColor: 'white',
   },
 
   backButton: {
@@ -137,6 +140,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#222',
+    fontFamily:FontType.Roboto_Medium
   },
 
   sectionTitle: {
@@ -145,11 +149,13 @@ const styles = StyleSheet.create({
     color: '#0E7490',
     marginTop: 10,
     marginBottom: 15,
+    fontFamily:FontType.Roboto_Medium
   },
 
   bottomContainer: {
     padding: 16,
-    backgroundColor: '#F4F4F4',
+    backgroundColor: 'white',
+    borderTopWidth: 0.5,
   },
 
   addressCard: {
@@ -163,6 +169,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#444',
     marginBottom: 4,
+    fontFamily:FontType.Roboto_Medium
   },
 
   editButton: {
@@ -179,5 +186,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: '#333',
+    fontFamily:FontType.Roboto_Medium
   },
 });

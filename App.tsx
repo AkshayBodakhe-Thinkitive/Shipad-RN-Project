@@ -5,7 +5,7 @@ import Toast from './app/components/toast/Toast'
 
 const App = () => {
   return (
-    <View style={{flex:1}}>
+    <View style={{flex:1, backgroundColor:'white'}}>
       <StatusBar
       translucent
       backgroundColor='transparent'

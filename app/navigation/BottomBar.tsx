@@ -5,6 +5,7 @@ import Feather from '@react-native-vector-icons/feather';
 import AntDesign from '@react-native-vector-icons/ant-design';
 import SampleScreen from "../domain/auth/screens/SampleScreen";
 import ProfileTab from '../domain/profile/Screens/ProfileTab';
+import { FontType } from '../constants/FontType';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,6 +21,7 @@ const BottomBar = () => {
         tabBarLabelStyle: {
           fontSize: 12,
           marginBottom: 5,
+          fontFamily:FontType.Roboto_Bold
         },
 
         tabBarIcon: ({ focused }) => {
@@ -70,8 +72,9 @@ export default BottomBar;
 const styles = StyleSheet.create({
   tabBar: {
     height: 75,
-    backgroundColor: '#F2F2F2',
-    borderTopWidth: 0,
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    fontFamily:FontType.Roboto_Medium
   },
 
 
