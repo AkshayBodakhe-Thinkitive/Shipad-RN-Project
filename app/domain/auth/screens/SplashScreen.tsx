@@ -10,13 +10,18 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector } from '../../../store/hooks';
 import { RootState } from '../../../store/storeConfig';
-import { AppNavConstants, AuthNavConstants } from '../../../constants/NavConstants';
+import {
+  AppNavConstants,
+  AuthNavConstants,
+} from '../../../constants/NavConstants';
 import { imagePaths } from '../../../constants/imagePaths';
 
 const SplashScreen = () => {
   const navigation = useNavigation<any>();
 
-  const isLoggedIn = useAppSelector((state:RootState)=>state.auth.isLoggedIn);
+  const isLoggedIn = useAppSelector(
+    (state: RootState) => state.auth.isLoggedIn,
+  );
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.6)).current;
@@ -37,7 +42,13 @@ const SplashScreen = () => {
     ]).start();
 
     const timer = setTimeout(() => {
-     { isLoggedIn ? navigation.replace(AppNavConstants.HOME) : navigation.replace(AuthNavConstants.LOGIN_SCREEN)} 
+      {
+        isLoggedIn
+          ? navigation.replace(AppNavConstants.HOME)
+          : navigation.replace(AppNavConstants.AUTH_NAVIGATOR, {
+              screen: AuthNavConstants.LOGIN_SCREEN,
+            });
+      }
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -55,12 +66,11 @@ const SplashScreen = () => {
         ]}
       >
         <Image
-          source={imagePaths.LOGO} 
+          source={imagePaths.LOGO}
           style={styles.logo}
           resizeMode="contain"
         />
       </Animated.View>
-
     </View>
   );
 };
@@ -70,7 +80,7 @@ export default SplashScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white', 
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
   },

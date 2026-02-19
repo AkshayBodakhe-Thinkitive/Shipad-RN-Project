@@ -30,7 +30,9 @@ const ProfileTab = () => {
 
   const logoutFunction = async () => {
     await dispatch(logoutAction());
-    navigation.navigate(AuthNavConstants.LOGIN_SCREEN);
+    navigation.navigate(AppNavConstants.AUTH_NAVIGATOR,{
+      screen : AuthNavConstants.LOGIN_SCREEN
+    });
   };
 
   return (

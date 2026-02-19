@@ -24,10 +24,10 @@ import { setToastMessage } from '../../../store/common-reducer/ToastReducer';
 import Button from '../../../components/Button';
 import InputText from '../../../components/inputText/InputText';
 import { Colors } from '../../../constants/ColorConstants';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import { FontType } from '../../../constants/FontType';
 import DropdownComponent from '../../../components/dropdown/DropDown';
+import DatePicker from '../../../components/datePicker/DatePicker';
 
 const FormField = ({ label, children }: any) => {
   return (
@@ -45,7 +45,6 @@ const EditProfile = () => {
   const profile = useAppSelector(
     (state: RootState) => state?.profile?.profileData,
   );
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -140,7 +139,6 @@ const EditProfile = () => {
               label="Last Name"
             />
 
-            
             <DropdownComponent
               label="Gender"
               selectedValue={formik.values.gender}
@@ -150,23 +148,14 @@ const EditProfile = () => {
                 { label: 'Female', value: 'FEMALE' },
                 { label: 'Other', value: 'OTHER' },
               ]}
-              onValueChange={(value) =>
-                formik.setFieldValue('gender', value)
-              }
+              onValueChange={value => formik.setFieldValue('gender', value)}
             />
 
             <FormField label="Date">
-              <TouchableOpacity
-                style={styles.inputRow}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text>
-                  {formik.values.birthDate
-                    ? moment(formik.values.birthDate).format('DD/MM/YYYY')
-                    : 'Select Date'}
-                </Text>
-                <Feather name="calendar" size={18} color="#777" />
-              </TouchableOpacity>
+              <DatePicker
+                date={formik.values.birthDate}
+                setValue={value => formik.setFieldValue('birthDate', value)}
+              />
             </FormField>
 
             <InputText
@@ -185,28 +174,58 @@ const EditProfile = () => {
 
             <View style={styles.addressCard}>
               <InputText
-                onChangeText={formik.handleChange('line1')}
+                onChangeText={formik.handleChange('address.line1')}
                 label="Line 1"
                 value={formik.values.address.line1}
               />
               <InputText
-                onChangeText={formik.handleChange('line2')}
+                onChangeText={formik.handleChange('address.line2')}
                 label="Line 2"
                 value={formik.values.address.line2}
               />
               <InputText
-                onChangeText={formik.handleChange('city')}
+                onChangeText={formik.handleChange('address.city')}
                 label="city"
                 value={formik.values.address.city}
               />
-              <InputText
-                onChangeText={formik.handleChange('state')}
-                label="state"
-                value={formik.values.address.state}
+              <DropdownComponent
+                label="State"
+                selectedValue={formik.values.address.state}
+                search
+                data={[
+                  { label: 'Île-de-France', value: 'ILE_DE_FRANCE' },
+                  {
+                    label: 'Auvergne-Rhône-Alpes',
+                    value: 'AUVERGNE_RHONE_ALPES',
+                  },
+                  {
+                    label: 'Bourgogne-Franche-Comté',
+                    value: 'BOURGOGNE_FRANCHE_COMTE',
+                  },
+                  { label: 'Brittany', value: 'BRITTANY' },
+                  {
+                    label: 'Centre-Val de Loire',
+                    value: 'CENTRE_VAL_DE_LOIRE',
+                  },
+                  { label: 'Corsica', value: 'CORSICA' },
+                  { label: 'Grand Est', value: 'GRAND_EST' },
+                  { label: 'Hauts-de-France', value: 'HAUTS_DE_FRANCE' },
+                  { label: 'Normandy', value: 'NORMANDY' },
+                  { label: 'Nouvelle-Aquitaine', value: 'NOUVELLE_AQUITAINE' },
+                  { label: 'Occitanie', value: 'OCCITANIE' },
+                  { label: 'Pays de la Loire', value: 'PAYS_DE_LA_LOIRE' },
+                  {
+                    label: "Provence-Alpes-Côte d'Azur",
+                    value: 'PROVENCE_ALPES_COTE_DAZUR',
+                  },
+                ]}
+                onValueChange={value =>
+                  formik.setFieldValue('address.state', value)
+                }
               />
               <InputText
                 label="country"
-                onChangeText={formik.handleChange('county')}
+                onChangeText={formik.handleChange('address.county')}
                 value={formik.values.address.country}
               />
             </View>
@@ -226,25 +245,6 @@ const EditProfile = () => {
             />
           </View>
         </ScrollView>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={
-              formik.values.birthDate
-                ? new Date(formik.values.birthDate)
-                : new Date()
-            }
-            mode="date"
-            display="default"
-            maximumDate={new Date()}
-            onChange={(event, selectedDate) => {
-              setShowDatePicker(false);
-              if (selectedDate) {
-                formik.setFieldValue('birthDate', selectedDate.toISOString());
-              }
-            }}
-          />
-        )}
 
         <View style={styles.bottomContainer}>
           <Button text="Submit" onPress={formik.handleSubmit} />
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
 
   addressCard: {
     backgroundColor: '#fff',
-    padding: 14,
+    padding: 0,
     borderRadius: 12,
     marginBottom: 15,
   },
