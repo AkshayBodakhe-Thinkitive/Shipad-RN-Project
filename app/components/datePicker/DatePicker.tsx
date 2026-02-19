@@ -13,7 +13,7 @@ const DatePicker = ({ date, setValue }: Props) => {
 
     if (selectedDate) {
       const formattedDate = selectedDate.toISOString();
-      setValue(formattedDate); // ✅ CALL FUNCTION
+      setValue(formattedDate); 
     }
   };
 
