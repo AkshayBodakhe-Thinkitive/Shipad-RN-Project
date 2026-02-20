@@ -10,123 +10,36 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { io, Socket } from 'socket.io-client';
+import {Socket } from 'socket.io-client';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import BackButton from '../../../components/backButton/BackButton';
-import { localChats } from '../components/LocalChats';
-
-type ChatScreenRouteParams = {
-  receiverId: string;
-};
-
-type Message = {
-  id: string;
-  sender: string;
-  text: string;
-  date: string;
-  status?: 'sent' | 'seen';
-};
+import { ChatScreenRouteParams, Message} from '../interfaces/MessageInterfaces';
+import { sendMessage} from '../components/socketConnection/SocketConnection';
+import { formatDayLabel } from '../components/socketConnection/SocketConnection';
+import { useSocketConnection } from '../hooks/useSocketConnection';
+import { useLocalChatLoader } from '../hooks/useLocalChatLoader';
 
 const ChatScreen = () => {
   const socketRef = useRef<Socket | null>(null);
   const flatListRef = useRef<FlatList>(null);
-
-  const route =
-    useRoute<RouteProp<{ params: ChatScreenRouteParams }, 'params'>>();
-
+  const route = useRoute<RouteProp<{ params: ChatScreenRouteParams }, 'params'>>();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
   const senderId = 'Shripad';
   const receiverId = route?.params?.receiverId || 'Atif';
-
   const isReceiverOnline = onlineUsers.includes(receiverId);
+  const IP = '192.168.10.228:5000';
 
-  // ---------------- SOCKET CONNECTION ----------------
-  useEffect(() => {
-    socketRef.current = io('http://192.168.10.228:5000', {
-      transports: ['websocket'],
-    });
+  useSocketConnection({socketRef, IP, senderId, setMessages, setOnlineUsers,});
+  useLocalChatLoader({ receiverId, setMessages });
 
-    socketRef.current.emit('register', senderId);
-
-    socketRef.current.on('receive_message', (data: any) => {
-      const newMsg: Message = {
-        id: Date.now().toString(),
-        sender: data.senderId,
-        text: data.message,
-        date: new Date().toISOString(),
-      };
-
-      setMessages(prev => [...prev, newMsg]);
-    });
-
-    socketRef.current.on('online_users', (users: string[]) => {
-      setOnlineUsers(users);
-    });
-
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, []);
-
-  // ---------------- LOAD LOCAL CHAT ----------------
-  useEffect(() => {
-    const chat = localChats.find(c => c.userId === receiverId);
-    if (chat) {
-      setMessages(chat.messages);
-    } else {
-      setMessages([]);
-    }
-  }, [receiverId]);
-
-  // ---------------- AUTO SCROLL ----------------
   useEffect(() => {
     if (messages.length > 0) {
       flatListRef.current?.scrollToEnd({ animated: true });
     }
   }, [messages]);
-
-  // ---------------- SEND MESSAGE ----------------
-  const sendMessage = () => {
-    if (!message.trim()) return;
-
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      sender: senderId,
-      text: message,
-      date: new Date().toISOString(),
-      status: isReceiverOnline ? 'seen' : 'sent',
-    };
-
-    socketRef.current?.emit('send_message', {
-      senderId,
-      receiverId,
-      message,
-    });
-
-    setMessages(prev => [...prev, newMsg]);
-    setMessage('');
-  };
-
-  // ---------------- DATE FORMATTER ----------------
-  const formatDayLabel = (dateString: string) => {
-    const messageDate = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-
-    if (messageDate.toDateString() === today.toDateString()) {
-      return 'Today';
-    }
-
-    if (messageDate.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    }
-
-    return messageDate.toDateString();
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -224,7 +137,20 @@ const ChatScreen = () => {
               placeholderTextColor="#999"
             />
 
-            <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={() =>
+                sendMessage({
+                  message,
+                  senderId,
+                  isReceiverOnline,
+                  socketRef,
+                  receiverId,
+                  setMessage,
+                  setMessages,
+                })
+              }
+            >
               <Text style={styles.sendText}>➤</Text>
             </TouchableOpacity>
           </View>

@@ -25,7 +25,7 @@ const Users = ({ navigation }: any) => {
     {
       id: '2',
       name: 'Rahul',
-      lastMessage: 'Kal milte hai office me.',
+      lastMessage: 'Kal milte hai office me. Bhai msg ko bada banan pdega taki number of lines bhi check ho sake',
     },
   ]);
 
@@ -38,14 +38,12 @@ const Users = ({ navigation }: any) => {
         })
       }
     >
-      {/* Avatar */}
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>
           {item.name.charAt(0).toUpperCase()}
         </Text>
       </View>
 
-      {/* User Info */}
       <View style={styles.userInfo}>
         <Text style={styles.username}>{item.name}</Text>
         <Text style={styles.lastMessage} numberOfLines={1}>
