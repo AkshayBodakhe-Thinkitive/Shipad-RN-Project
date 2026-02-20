@@ -9,4 +9,6 @@ export const AppNavConstants = {
     EDIT_PROFILE : 'EditProfile',
     SAMPLE_SCREEN : 'SampleScreen',
     SPLASH_SCREEN : 'SplashScreen',
+    MESSAGE_SCREEN : 'MessageScreen',
+    USERS : 'users'
 }

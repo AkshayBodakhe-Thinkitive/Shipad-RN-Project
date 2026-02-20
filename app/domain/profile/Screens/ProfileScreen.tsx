@@ -19,6 +19,7 @@ import { Colors } from '../../../constants/ColorConstants';
 import { imagePaths } from '../../../constants/imagePaths';
 import { firstLetterCapitalize, formatDateTime } from '../../../utils/helperUtils';
 import { FontType } from '../../../constants/FontType';
+import BackButton from '../../../components/backButton/BackButton';
 
 const ProfileScreen = () => {
   const profile = useAppSelector(
@@ -43,12 +44,7 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Feather name="arrow-left" size={22} color="#333" />
-        </TouchableOpacity>
+        <BackButton/>
 
         <View style={styles.imageContainer}>
           {imageLoading && <ActivityIndicator size="large" color="white" />}

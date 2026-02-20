@@ -7,6 +7,7 @@ import SampleScreen from "../domain/auth/screens/SampleScreen";
 import ProfileTab from '../domain/profile/Screens/ProfileTab';
 import { FontType } from '../constants/FontType';
 import MessageScreen from '../domain/Message/screens/MessageScreen'
+import Users from '../domain/Message/screens/Users';
 
 const Tab = createBottomTabNavigator();
 
@@ -61,7 +62,7 @@ const BottomBar = () => {
     >
       <Tab.Screen name="Home" component={SampleScreen} />
       <Tab.Screen name="Vitals" component={SampleScreen} />
-      <Tab.Screen name="Chat" component={MessageScreen} />
+      <Tab.Screen name="Chat" component={Users} />
       <Tab.Screen name="Education" component={SampleScreen} />
       <Tab.Screen name="Profile" component={ProfileTab} />
     </Tab.Navigator>

@@ -11,11 +11,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { io, Socket } from 'socket.io-client';
+import { useRoute, RouteProp } from '@react-navigation/native';
+import BackButton from '../../../components/backButton/BackButton';
+import { localChats } from '../components/LocalChats';
+
+type ChatScreenRouteParams = {
+  receiverId: string;
+};
 
 type Message = {
+  id: string;
   sender: string;
   text: string;
-  time: string;
+  date: string;
   status?: 'sent' | 'seen';
 };
 
@@ -23,15 +31,19 @@ const ChatScreen = () => {
   const socketRef = useRef<Socket | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
-  const [message, setMessage] = useState<string>('');
+  const route =
+    useRoute<RouteProp<{ params: ChatScreenRouteParams }, 'params'>>();
+
+  const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
   const senderId = 'Shripad';
-  const receiverId = 'Atif';
+  const receiverId = route?.params?.receiverId || 'Atif';
 
   const isReceiverOnline = onlineUsers.includes(receiverId);
 
+  // ---------------- SOCKET CONNECTION ----------------
   useEffect(() => {
     socketRef.current = io('http://192.168.10.228:5000', {
       transports: ['websocket'],
@@ -41,12 +53,10 @@ const ChatScreen = () => {
 
     socketRef.current.on('receive_message', (data: any) => {
       const newMsg: Message = {
+        id: Date.now().toString(),
         sender: data.senderId,
         text: data.message,
-        time: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+        date: new Date().toISOString(),
       };
 
       setMessages(prev => [...prev, newMsg]);
@@ -61,23 +71,32 @@ const ChatScreen = () => {
     };
   }, []);
 
-  
-    useEffect(() => {
-      if (messages.length > 0) {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }
-    }, [messages]);
+  // ---------------- LOAD LOCAL CHAT ----------------
+  useEffect(() => {
+    const chat = localChats.find(c => c.userId === receiverId);
+    if (chat) {
+      setMessages(chat.messages);
+    } else {
+      setMessages([]);
+    }
+  }, [receiverId]);
 
+  // ---------------- AUTO SCROLL ----------------
+  useEffect(() => {
+    if (messages.length > 0) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
+
+  // ---------------- SEND MESSAGE ----------------
   const sendMessage = () => {
     if (!message.trim()) return;
 
     const newMsg: Message = {
+      id: Date.now().toString(),
       sender: senderId,
       text: message,
-      time: new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      date: new Date().toISOString(),
       status: isReceiverOnline ? 'seen' : 'sent',
     };
 
@@ -91,6 +110,24 @@ const ChatScreen = () => {
     setMessage('');
   };
 
+  // ---------------- DATE FORMATTER ----------------
+  const formatDayLabel = (dateString: string) => {
+    const messageDate = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (messageDate.toDateString() === today.toDateString()) {
+      return 'Today';
+    }
+
+    if (messageDate.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+
+    return messageDate.toDateString();
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -100,18 +137,21 @@ const ChatScreen = () => {
         <View style={styles.container}>
           {/* HEADER */}
           <View style={styles.header}>
-            <Text style={styles.username}>{receiverId}</Text>
+            <BackButton color="white" />
 
-            <View style={styles.statusContainer}>
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: isReceiverOnline ? '#4CAF50' : '#777' },
-                ]}
-              />
-              <Text style={styles.statusText}>
-                {isReceiverOnline ? 'Online' : 'Offline'}
-              </Text>
+            <View style={styles.profileSection}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {receiverId.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+
+              <View>
+                <Text style={styles.username}>{receiverId}</Text>
+                <Text style={styles.statusText}>
+                  {isReceiverOnline ? 'Online' : 'Offline'}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -119,61 +159,73 @@ const ChatScreen = () => {
           <FlatList
             ref={flatListRef}
             data={messages}
-            keyExtractor={(_, index) => index.toString()}
+            keyExtractor={item => item.id}
             contentContainerStyle={{
-              flexGrow: 1,
-              justifyContent: 'flex-end',
               paddingVertical: 10,
+              paddingHorizontal: 10,
             }}
-            renderItem={({ item }) => (
-              <View
-                style={[
-                  styles.messageBubble,
-                  item.sender === senderId
-                    ? styles.myMessage
-                    : styles.otherMessage,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.messageText,
-                    item.sender === senderId && { color: '#fff' },
-                  ]}
-                >
-                  {item.text}
-                </Text>
+            renderItem={({ item, index }) => {
+              const isMe = item.sender === senderId;
 
-                <View style={styles.metaRow}>
-                  <Text style={styles.timeText}>{item.time}</Text>
+              const currentDate = new Date(item.date).toDateString();
+              const prevDate =
+                index > 0
+                  ? new Date(messages[index - 1].date).toDateString()
+                  : null;
 
-                  {item.sender === senderId && (
-                    <Text
+              const showDateSeparator = currentDate !== prevDate;
+
+              return (
+                <>
+                  {showDateSeparator && (
+                    <View style={styles.dateSeparator}>
+                      <Text style={styles.dateSeparatorText}>
+                        {formatDayLabel(item.date)}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View
+                    style={[
+                      styles.messageRow,
+                      isMe ? styles.myRow : styles.otherRow,
+                    ]}
+                  >
+                    <View
                       style={[
-                        styles.tick,
-                        {
-                          color: item.status === 'seen' ? '#ffffff' : '#ffffff',
-                        },
+                        styles.bubble,
+                        isMe ? styles.myBubble : styles.otherBubble,
                       ]}
                     >
-                      ✓
-                    </Text>
-                  )}
-                </View>
-              </View>
-            )}
+                      <Text style={styles.messageText}>{item.text}</Text>
+
+                      <View style={styles.metaContainer}>
+                        <Text style={styles.timeText}>
+                          {new Date(item.date).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </>
+              );
+            }}
           />
 
-          {/* INPUT */}
-          <View style={styles.inputWrapper}>
+          {/* INPUT BAR */}
+          <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
               value={message}
               onChangeText={setMessage}
-              placeholder="Type a message..."
-              placeholderTextColor="#777"
+              placeholder="Message"
+              placeholderTextColor="#999"
             />
+
             <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-              <Text style={styles.sendText}>Send</Text>
+              <Text style={styles.sendText}>➤</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -187,114 +239,157 @@ export default ChatScreen;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#e5ddd5', // WhatsApp bg color
   },
 
   container: {
     flex: 1,
-    paddingHorizontal: 15,
   },
 
   header: {
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#0a0a0a',
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#075E54',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    gap: 10,
+  },
+
+  backButton: {
+    paddingRight: 10,
+  },
+
+  backArrow: {
+    fontSize: 22,
+    color: '#fff',
+  },
+
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#128C7E',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+
+  avatarText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
   },
 
   username: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#292525',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 5,
+  dateSeparator: {
+    alignSelf: 'center',
+    backgroundColor: '#DCF8C6',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginVertical: 10,
   },
 
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
+  dateSeparatorText: {
+    fontSize: 12,
+    color: '#000',
+    fontWeight: '500',
   },
 
   statusText: {
-    color: '#181616',
-    fontSize: 13,
+    color: '#e0e0e0',
+    fontSize: 12,
+    marginTop: 2,
   },
 
-  messageBubble: {
-    padding: 12,
-    marginVertical: 6,
-    borderRadius: 16,
+  messageRow: {
+    marginVertical: 4,
+    flexDirection: 'row',
+  },
+
+  myRow: {
+    justifyContent: 'flex-end',
+  },
+
+  otherRow: {
+    justifyContent: 'flex-start',
+  },
+
+  bubble: {
     maxWidth: '75%',
+    padding: 10,
+    borderRadius: 12,
   },
 
-  myMessage: {
-    backgroundColor: '#2563EB',
-    alignSelf: 'flex-end',
-    borderTopRightRadius: 4,
+  myBubble: {
+    backgroundColor: '#DCF8C6',
+    borderTopRightRadius: 0,
   },
 
-  otherMessage: {
-    backgroundColor: '#1F2937',
-    alignSelf: 'flex-start',
-    borderTopLeftRadius: 4,
+  otherBubble: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 0,
   },
 
   messageText: {
-    color: '#E5E7EB',
-    fontSize: 18,
+    fontSize: 16,
   },
 
-  metaRow: {
+  metaContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     alignItems: 'center',
-    marginTop: 4,
+    alignSelf: 'flex-end',
+    marginTop: 5,
   },
 
   timeText: {
-    fontSize: 15,
-    color: '#fff',
+    fontSize: 11,
+    color: '#555',
     marginRight: 4,
   },
 
   tick: {
-    fontSize: 11,
+    fontSize: 12,
   },
 
-  inputWrapper: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#1F1F1F',
+    padding: 8,
+    backgroundColor: '#f0f0f0',
   },
 
   input: {
     flex: 1,
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 25,
     paddingHorizontal: 15,
-    paddingVertical: 15,
-    color: '#1b1919',
-    marginRight: 10,
-    borderWidth: 1,
+    paddingVertical: 10,
+    fontSize: 16,
   },
 
   sendButton: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    marginLeft: 8,
+    backgroundColor: '#075E54',
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   sendText: {
     color: '#fff',
-    fontWeight: '600',
+    fontSize: 18,
   },
 });

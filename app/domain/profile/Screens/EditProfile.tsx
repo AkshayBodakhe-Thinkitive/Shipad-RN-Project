@@ -28,6 +28,7 @@ import moment from 'moment';
 import { FontType } from '../../../constants/FontType';
 import DropdownComponent from '../../../components/dropdown/DropDown';
 import DatePicker from '../../../components/datePicker/DatePicker';
+import BackButton from '../../../components/backButton/BackButton';
 
 const FormField = ({ label, children }: any) => {
   return (
@@ -107,12 +108,7 @@ const EditProfile = () => {
     <FormikProvider value={formik}>
       <SafeAreaView style={styles.container}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Feather name="arrow-left" size={22} color="#333" />
-          </TouchableOpacity>
+          <BackButton/>
 
           <View style={styles.imageContainer}>
             <Image
